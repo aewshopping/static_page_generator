@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Load Local Text Files</title>
+  <style>
+	body {background-color: powderblue;
+	font-family: Arial, Helvetica, sans-serif;}
+	h1   {color: blue;}
+	#output {white-space:pre-wrap;}
+</style>
+</head>
+<body>
+
+  <input type="file" id="fileInput" accept=".txt" multiple>
+  <button onclick="loadFile()">Load File</button>
+  <div id="output"></div>
+
+  <script>
+ 
+    function loadFile() {
+		const input = document.getElementById('fileInput');
+		let filesarr = [];
+		filesarr = input.files;
+		for (let i = 0; i < input.files.length; i++) {
+		
+			let file = input.files[i];
+
+			if (file) {
+			
+				let reader = new FileReader();
+				let myTitle = input.files[i].name;
+				let lastModDate = input.files[i].lastModifiedDate;
+					console.log(input.files[i]);
+
+				reader.onload = function(e) {
+
+					const fileContent = e.target.result;
+					const outputDiv = document.getElementById('output');
+					const newDiv = document.createElement("div");
+					newDiv.innerHTML = (`<h1>${myTitle}</h1>${markdownParser(`${fileContent}<br><br><i>Last modified:${lastModDate}</i><br><br><hr>`)}`);
+					outputDiv.appendChild(newDiv);
+				};
+
+			reader.readAsText(file);
+			
+			} else {
+			
+				alert('Please select a file.');
+			}
+		}
+	}
+
+const markdownParser = (text) => {
+	const toHTML = text
+		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
+		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
+		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
+	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
+	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
+		.replace(/\_\_(.*)\_\_/gim, '<b>$1</b>') // bold text double _
+		.replace(/\_(.*)\_/gim, '<i>$1</i>'); // italic text single _
+	return toHTML.trim(); // using trim method to remove whitespace
+}
+  </script>
+
+</body>
+</html>
