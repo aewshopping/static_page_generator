@@ -49,8 +49,8 @@ const markdownParser = (text) => {
 	const toHTML = text
 		.replace(/^\d+(\. | )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. " or "1 "
 		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
-		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists tag
-		.replace(/((<li>.*<\/li>\r?\n){1,})(?!<)/g, '<ul>$1</ul>') // lists unordered outer tag	- needs to come after previous list match
+		.replace(/((^- .*\r?\n){1,})/gim, '<ul>\n$1</ul>') // lists unordered outer tags
+		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists unordered inner tag
 		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
 		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
 		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
