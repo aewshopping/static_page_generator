@@ -6,7 +6,7 @@
 	body {background-color: powderblue;
 	font-family: Arial, Helvetica, sans-serif;}
 	h1   {color: blue;}
-	#output {white-space:pre-wrap;}
+	/* #output {white-space:pre-wrap;} need for where markdown parser fails? */
 </style>
 </head>
 <body>
@@ -47,13 +47,18 @@
 
 const markdownParser = (text) => {
 	const toHTML = text
+		.replace(/^\d+(\. | )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. " or "1 "
+		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
+		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists tag
+		.replace(/((<li>.*<\/li>\r?\n){1,})(?!<)/g, '<ul>$1</ul>') // lists unordered outer tag	- needs to come after previous list match
 		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
 		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
 		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
 	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
 	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
 		.replace(/\_\_(.*)\_\_/gim, '<b>$1</b>') // bold text double _
-		.replace(/\_(.*)\_/gim, '<i>$1</i>'); // italic text single _
+		.replace(/\_(.*)\_/gim, '<i>$1</i>') // italic text single _
+		.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
 	return toHTML.trim(); // using trim method to remove whitespace
 }
   </script>
