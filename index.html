@@ -165,17 +165,14 @@
 					let tag_html = [];
 					
 					for (let p=0; p < matchAll_arr.length; p++) {
-						// bit tricky to work with this because matches and capture groups are both returned, must be a way to iterate over capture groups only...
-						 if (typeof matchAll_arr[p][1] != 'undefined') {
-							 tagarray[p] = matchAll_arr[p][1].toLowerCase();
-							 data_tags.push(matchAll_arr[p][1].toLowerCase());
-						 } else if (typeof matchAll_arr[p][2] != 'undefined') {
-							 tagarray[p] = matchAll_arr[p][2].toLowerCase();
-							 data_tags.push(matchAll_arr[p][2].toLowerCase());						 
-						 }
-						 tag_html[p] = `<code><span class="tag ${tagarray[p]}">${tagarray[p]}</span></code>`
+						for (let u=1; u <= 2; u++) { // only have two capturing groups to test (note that with matchAll array[0] will be the match which we don't want, we just want the groups so start at array[1])
+							if (typeof matchAll_arr[p][u] != 'undefined') {
+							 tagarray[p] = matchAll_arr[p][u].toLowerCase(); data_tags.push(matchAll_arr[p][u].toLowerCase());
+							}
+						}
+					 tag_html[p] = `<code><span class="tag ${tagarray[p]}">${tagarray[p]}</span></code>`
 					}
-					console.log(matchAll_arr);
+					
 					let tag_html_output = tag_html.join(" | "); // to show in summary element
 					let tag_classes = tagarray.join(" "); // to include in details element class list
 					
@@ -191,7 +188,7 @@
 					<summary><span class="copyhighlight"><span class="${COPYTHIS}" title='copy filename to clipboard' data-${COPYATTR}='${myfilename}'>©</span> ${myfilename}</span><br>
 					${tag_html_output}
 					</summary>
-					${parsedText}<br><br>
+					${parsedText}<br><br><br>
 					</details>`;
 					outputDiv.appendChild(newDiv);
 					
