@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text file viewer</title>
+  <style>
+	body {background-color: Aquamarine;
+		font-family: Arial, Helvetica, sans-serif;
+		color: DarkSlateGray;}
+	details {padding: 0px 20px 0px 10px;}		
+	summary { background-color: MediumSpringGreen;
+		border-radius: 4px;
+		padding: 10px;
+		margin: 1px -10px 1px -10px; /* to line up text with summary elem */
+		cursor:row-resize}
+	.copyhighlight { border-radius: 20px;
+		padding: 4px 10px;
+		&:has(.copyflag:hover){outline:1px solid DarkSlateGray}
+		}
+	h1   {color: Blue;}
+	.tag {color:DeepPink;
+		background-color: WhiteSmoke;
+		padding: 1px 4px 1px 4px;
+		border-radius: 4px;}
+	.tag:hover {background-color: LightYellow;
+	cursor:pointer}
+	.tagselected {background-color: Gold}
+	.tag_cat {background-color: WhiteSmoke;
+		padding: 1px 4px 1px 4px;
+		border-radius: 4px;
+		margin-right: 4px}
+	#tag_output {padding: 10px 10px 20px 10px}
+	details.hider:not(:has(.tagselected)) {display:none} /* hides details elems if their tags are not selected, if the hider class is present */
+	.copyflag {border-radius: 20px;
+		cursor:pointer;
+		&.copied {color:DeepPink;}
+		} /* css name needs to match js const COPYTHIS */
+	/* #output {white-space:pre-wrap;} need for where markdown parser fails? */
+</style>
+</head>
+<body>
+
+  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()"><button class="showall">show all notes</button>
+  <br><br>
+  <div id="tag_output"></div>
+  <div id="output"></div>
+
+  <script>
+ 
+    function loadFile() {
+		const input = document.getElementById('fileInput');
+		let data = [];
+		let data_tags = []; // to store a list of tags across all files 
+		const TAGGER = "tagselected";
+		const HIDER = "hider";
+		const NOTE = "note";
+		const COPYTHIS = "copyflag";
+		const COPYATTR = "filename";
+
+		// creates an object that I don't use but might come in handy in future iterations
+		function Data(filename, title, date_modified, mycontent, mytags) {
+		  this.filename = filename;
+		  this.title = title;
+		  this.date_modified = date_modified;
+		  this.mycontent = mycontent;
+		  this.tags = mytags;
+		}
+		
+		function allFilesLoaded() {
+		// do stuff after all files have been loaded, called in last file load below
+		
+			function clickHandler(evt){	
+			
+				if(evt.target.classList.contains("tag")) {
+				
+					evt.preventDefault(); // stops the details div opening
+					const targetTag = evt.target.classList[0] + " " + evt.target.classList[1]; // ie all elements with class "tag" and "some tag name"
+					
+					const matchTagElements = document.getElementsByClassName(targetTag);
+					
+					// highlights selected tags through css class
+					for (let q = 0; q < matchTagElements.length; q++ ) {
+						matchTagElements[q].classList.toggle(TAGGER);
+					}
+					
+					const notesElements = document.getElementsByClassName(NOTE);	
+
+					// hides notes without selected tags through css has selector. Only applied after first tag selected so you can see all notes at the beginning
+					for (let s = 0; s < notesElements.length; s++ ) {
+						notesElements[s].classList.add(HIDER);
+					}					
+				} else if (evt.target.classList.contains("showall")) {
+				
+					// shows all notes and removes tag highlights
+					const notesElements = document.getElementsByClassName(NOTE);
+					for (let s = 0; s < notesElements.length; s++ ) {
+						notesElements[s].classList.remove(HIDER);
+					}
+					
+					const tagHighlights = document.getElementsByClassName(TAGGER);  // recursion problem because this is a dynamic list! therefore iterating backwards below. There's prob a better way				
+					for (let s = tagHighlights.length -1; s >= 0; s-- ) {
+						tagHighlights[s].classList.remove(TAGGER);
+					}
+				} else if (evt.target.classList.contains(COPYTHIS)) {
+					evt.preventDefault(); // stops the details div opening
+					const COPYTEXT = evt.target.dataset[COPYATTR]
+					navigator.clipboard.writeText(COPYTEXT);
+					evt.target.classList.toggle("copied");
+				}
+				
+			}
+		
+			data_tags = data_tags.sort();
+			
+			// count how instances of each item in array and return as object of unique names and count
+			const occurrences = data_tags.reduce(function (acc, curr) {
+				return acc[curr] ? ++acc[curr] : acc[curr] = 1, acc
+			}, {});
+			
+			// turn back into two arrays, one for tag name and the other for count values
+			data_tags = Object.keys(occurrences).map((key) => key); // names
+			let data_tags_count = Object.keys(occurrences).map((key) => occurrences[key]); // values
+			
+			// create html to show all tags
+			let data_tags_html = [];
+			for (let r = 0; r < data_tags.length; r++) {
+				data_tags_html[r] = `<code><span class='tag ${data_tags[r]}'>${data_tags[r]}&nbsp(${data_tags_count[r]})</span></code>`
+			}
+			// put all tags at top of the page
+			let data_tags_string = data_tags_html.join(" | ");
+			document.getElementById('tag_output').innerHTML = data_tags_string; 
+			
+			document.addEventListener("click", clickHandler);
+			
+		}
+		
+		// load in all the files...
+		for (let i = 0; i < input.files.length; i++) {
+		
+			let file = input.files[i];
+
+			if (file) {
+
+				let reader = new FileReader();
+				
+				let myfilename = input.files[i].name;
+				let lastModDate = input.files[i].lastModifiedDate;
+				
+				// this is the async function will runs each time a file is finished loading
+				reader.onload = function(e) {
+
+					const fileContent = e.target.result;	
+					
+					let mytitle = "";
+					const regex_title = /(?<=^# ).*$/gm;
+					let checktitle = fileContent.match(regex_title);
+					if (checktitle != null){mytitle = checktitle[0];}
+					
+					// find all the tags used in the files
+					const regex_tag = /(?<=#)(\w+)\b(?!\/)|#\w+\/(\w*\b)/g;   // picks up too many! Note "# Title" with a space is <h1>; #tag with no space is a tag [old (?<=#)\w*\b - no taxonomy]
+					let matchAll = fileContent.matchAll(regex_tag);
+					let matchAll_arr = Array.from(matchAll);
+					let tagarray = [];
+					let tag_html = [];
+					
+					for (let p=0; p < matchAll_arr.length; p++) {
+						// bit tricky to work with this because matches and capture groups are both returned, must be a way to iterate over capture groups only...
+						 if (typeof matchAll_arr[p][1] != 'undefined') {
+							 tagarray[p] = matchAll_arr[p][1].toLowerCase();
+							 data_tags.push(matchAll_arr[p][1].toLowerCase());
+						 } else if (typeof matchAll_arr[p][2] != 'undefined') {
+							 tagarray[p] = matchAll_arr[p][2].toLowerCase();
+							 data_tags.push(matchAll_arr[p][2].toLowerCase());						 
+						 }
+						 tag_html[p] = `<code><span class="tag ${tagarray[p]}">${tagarray[p]}</span></code>`
+					}
+					console.log(matchAll_arr);
+					let tag_html_output = tag_html.join(" | "); // to show in summary element
+					let tag_classes = tagarray.join(" "); // to include in details element class list
+					
+					// object not being used right now
+					data.push(new Data(input.files[i].name, mytitle, input.files[i].lastModifiedDate, fileContent, tagarray));
+
+					const outputDiv = document.getElementById('output');
+					const newDiv = document.createElement("div");
+					const parsedText = markdownParser(fileContent);
+					
+					// build the details element for the file loaded
+					newDiv.innerHTML = `<details class="${NOTE} ${tag_classes}">
+					<summary><span class="copyhighlight"><span class="${COPYTHIS}" title='copy filename to clipboard' data-${COPYATTR}='${myfilename}'>©</span> ${myfilename}</span><br>
+					${tag_html_output}
+					</summary>
+					${parsedText}<br><br>
+					</details>`;
+					outputDiv.appendChild(newDiv);
+					
+					// if it is the last file, do stuff after it is all loaded
+					if (i + 1 === input.files.length) {
+						allFilesLoaded();
+					}
+
+				};
+			
+			reader.readAsText(file); // this calls the async reader.onload function so don't put anything after this
+			
+			}
+		}
+
+	}
+
+const markdownParser = (text) => {
+
+	// used in the tag parse below because I wanted to get lower case class names but keep text as user had written it
+	function tagreplacer(match, p1, p2, p3, p4, offset, string) {
+	//	console.log("p1:" + p1+ " p2:" +p2+ " p3:" +p3+ " p4:" +p4)
+		if (typeof p2 != 'undefined') {
+			// for when we have #tag match (group 1 = #) (group 2 = tag)
+			const p2_lower = p2.toLowerCase()
+			return `<span class='tag ${p2_lower}'>${p1}${p2}</span>`;
+		} else if (typeof p4 != 'undefined') {
+			// for when we have a #something/childtag match (group 3 = #something/) (group 4 = childtag)
+			const p4_lower = p4.toLowerCase();
+			return `<span class='tag_cat'>${p3}</span><span class='tag ${p4_lower}'>${p4}</span>`;
+		} else {
+			console.log("no tag matches found for " + string);
+		}
+		
+	}
+	const toHTML = text
+		.replace(/^\d+(\. | )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. " or "1 "
+		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
+		.replace(/((^- .*\r?\n){1,})/gim, '<ul>\n$1</ul>') // lists unordered outer tags
+		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists unordered inner tag
+		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
+		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
+		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
+	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
+	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
+		.replace(/\_\_(.*)\_\_/gim, '<b>$1</b>') // bold text double _
+		.replace(/\_(.*)\_/gim, '<i>$1</i>') // italic text single _
+		.replace(/(#)(\w+)\b(?!\/)|(#\w+\/)(\w+)\b/gm, tagreplacer) // tag finder, replace with replacer function
+		.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
+	return toHTML.trim(); // using trim method to remove whitespace
+}
+  </script>
+
+</body>
+</html>
