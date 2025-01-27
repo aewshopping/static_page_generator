@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text file viewer</title>
+  <style>
+    button {font: inherit;}
+	body {background-color: White;
+		font-family: Arial, Helvetica, sans-serif;
+		color: DarkSlateGray;}
+	details.note {padding-left: 10px;
+		summary { background-color: Aquamarine;
+			border-radius: 4px;
+			padding: 10px;
+			margin-left: -10px; /* to line up text with summary elem */
+			cursor:row-resize}
+		}
+	/* ### START OF TAG TAXONOMY CSS */
+	#tag_output {
+	  display: flex;
+	  align-items: flex-start;
+	  flex-wrap: wrap;
+	  gap: 10px;
+	  padding: 10px 0 20px 0;
+	  details {
+		flex-grow: 1;
+		background-color: Aquamarine;
+		border-radius: 6px;
+		padding: 4px;
+		max-width: 200px;
+	  }
+	  summary {
+		&::marker {
+		  content: "+ ";
+		}
+	  }
+
+	  details[open] {
+		flex-basis: 100%;
+		flex-grow: 1;
+		margin-left: 150px;
+		padding: 0px;
+		max-width: 100%;
+		order: 2;
+	  }
+
+	  details[open] summary {
+		margin-left: -150px;
+		background-color: Aquamarine;
+		border-radius: 6px;
+		padding: 4px;
+		&::marker {
+		  content: "- ";
+		}
+	  }
+	  details[open]::details-content {
+		margin-top: -27px;
+		padding: 4px;
+		border-radius: 6px;
+	  }
+	  details.details_divider {
+		background-color: White;
+		order: 1;
+		min-width: calc(100% - 20px); 
+		cursor: default;
+		summary {
+		  &::marker {
+			content: "";
+		  }
+		}
+		&[open] {min-width: calc(100% - 150px - 20px); /* allow for summary offset when open and body margin */
+		}
+		&[open] summary {
+		  background-color: White;
+		}
+		&[open]::details-content {
+		  margin-top: 0;
+		  padding:0;
+		}
+	  }
+	}
+	/* ### END OF TAG TAXONOMY CSS */		
+	
+	.copyhighlight { border-radius: 20px;
+		padding: 4px 10px;
+		&:has(.copyflag:hover){outline:1px solid DarkSlateGray}
+		}
+	h1   {color: Blue;}
+	.tag {/* color:DeepPink; */
+		background-color: WhiteSmoke;
+		padding: 1px 4px 1px 4px;
+		border-radius: 4px;}
+	.tag:hover {background-color: LightYellow;
+		cursor:pointer}
+	.tagselected {background-color: Gold}
+	.tag_cat {background-color: WhiteSmoke;
+		padding: 1px 4px 1px 4px;
+		border-radius: 4px;
+		margin-right: 4px;}
+	
+	details.hider:not(:has(.tagselected)) {display:none;} /* hides details elems if their tags are not selected, if the hider class is present (added after first tag click to all details elems). The OR filter */
+	body:has(#and_filter:checked) {
+		details.and_hider {display:none} /* hides details elems if the and_hider class is present. The AND filter */
+		.tag:hover {background-color: MistyRose;}
+		.tagselected {background-color: Pink;
+			color: MediumVioletRed}
+	}
+		
+	.copyflag {border-radius: 20px;
+		cursor:pointer;
+		&.copied {color:DeepPink;}
+		} /* css name needs to match js const COPYTHIS */
+	#output {display: flex;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 10px;}
+	.note {
+		flex-grow: 1;
+		flex-basis: 400px;
+		&[open] {
+			min-width: calc(100% - 30px); /* allow for margins */
+			border: 2px solid DarkSlateGray;
+			border-radius: 6px;
+		}
+	}
+	/* The switch - the box around the slider */
+	.switch {
+	  position: relative;
+	  display: inline-block;
+	  width: 30px;
+	  height: 17px;
+	}
+	/* Hide default HTML checkbox */
+	.switch input {
+	  opacity: 0;
+	  width: 0;
+	  height: 0;
+	}
+	/* The slider */
+	.slider {
+	  position: absolute;
+	  cursor: pointer;
+	  top: 0;
+	  left: 0;
+	  right: 0;
+	  bottom: 0;
+	  background-color: Gold;
+	  transition: .4s;
+	  border-radius: 17px;
+	}
+
+	.slider:before {
+	  position: absolute;
+	  content: "";
+	  height: 13px;
+	  width: 13px;
+	  left: 2px;
+	  bottom: 2px;
+	  background-color: white;
+	  transition: .1s;
+	  border-radius: 50%;
+	}
+	input:checked + .slider {background-color: Pink;}
+//	input:focus + .slider {box-shadow: 0 0 1px Pink;}
+	input:checked + .slider:before {transform: translateX(13px);}
+	.flex-row {
+	  display: flex;
+	  align-items: center;
+	  padding: 4px;
+	}
+	.flex-row > .ANDOR_label {
+	  padding-inline: 4px;
+	}
+	.flex-row > .showall {
+	  cursor:pointer;
+	  color: DarkSlateGray;
+	  margin-left:40px;
+	  background-color:white;
+	  border: 2px solid Gold;
+	  border-radius: 6px;
+	  &:hover {
+		background-color: LightYellow;
+	  }
+	}
+	  
+	body:has(#and_filter:checked) .showall {border: 2px solid Pink;
+	  &:hover {background-color:MistyRose;
+	}
+	
+</style>
+</head>
+<body>
+
+  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
+  <br><br>
+
+  <main>
+  <p><b>Tag categories</b></p>
+  <div id="tag_output"></div>
+
+  <p><b>Text files</b></p>
+  <div class="flex-row">
+  <div class="ANDOR_label">Filter</div>
+  <div class="ANDOR_label">OR</div>
+  <label for="and_filter" class="switch"><input type="checkbox" id="and_filter" name="and_filter"><span class="slider"></span></label> 
+  <div class="ANDOR_label">AND</div>
+  <button class="showall">clear filters</button>
+  </div>
+  
+
+  <div id="output"></div>
+  </main>
+  <script>
+ 
+    function loadFile() {
+		const input = document.getElementById('fileInput');
+		let data = [];
+		let data_tags = []; // to store a list of tags across all files
+		let taxon_array = [];
+		const TAGGER = "tagselected";
+		const HIDER = "hider";
+		const AND_HIDER = "and_hider";
+		const NOTE = "note";
+		const COPYTHIS = "copyflag";
+		const COPYATTR = "filename";
+		let filter_counter = 0;
+
+		// creates an object that I don't use but might come in handy in future iterations
+		function Data(filename, title, date_modified, mycontent, mytags) {
+		  this.filename = filename;
+		  this.title = title;
+		  this.date_modified = date_modified;
+		  this.mycontent = mycontent;
+		  this.tags = mytags;
+		}
+		
+		function allFilesLoaded() {
+		// do stuff after all files have been loaded, called in last file load below
+		
+			function clickHandler(evt){	
+			
+				if(evt.target.classList.contains("tag")) {
+				
+					evt.preventDefault(); // stops the details div opening
+					const targetTag = evt.target.classList[0] + " " + evt.target.classList[1]; // ie all elements with class "tag" and "some tag name"
+					
+					const matchTagElements = document.getElementsByClassName(targetTag);
+					
+					// highlights selected tags through css class
+					for (let q = 0; q < matchTagElements.length; q++ ) {
+						let onOff = matchTagElements[q].classList.toggle(TAGGER);
+						if (onOff === true && q===0) {
+							filter_counter ++
+						} else if (onOff === false && q===0) {
+							filter_counter --
+						}
+					}
+					
+					const notesElements = document.getElementsByClassName(NOTE);
+					const notesNodes = document.querySelectorAll(`.${NOTE}`);
+
+					for (const elem of notesNodes) {
+						const ANDcount = elem.querySelectorAll(`summary .${TAGGER}`).length; // count tag matches
+						elem.classList.add(HIDER); // hides notes without selected tags through css. Applied here not onload so you can see all notes at start
+
+						if (ANDcount < filter_counter) {
+							elem.classList.add(AND_HIDER);
+						} else {
+							elem.classList.remove(AND_HIDER);
+						}
+						
+					};
+	
+					
+				} else if (evt.target.classList.contains("showall")) {
+				
+					// shows all notes and removes tag highlights
+					const notesElements = document.getElementsByClassName(NOTE);
+					for (let s = 0; s < notesElements.length; s++ ) {
+						notesElements[s].classList.remove(HIDER);
+						notesElements[s].classList.remove(AND_HIDER);
+					}
+					
+					const tagHighlights = document.getElementsByClassName(TAGGER);  // recursion problem because this is a dynamic list! therefore iterating backwards below. There's prob a better way				
+					for (let s = tagHighlights.length -1; s >= 0; s-- ) {
+						tagHighlights[s].classList.remove(TAGGER);
+					}
+				} else if (evt.target.classList.contains(COPYTHIS)) {
+					evt.preventDefault(); // stops the details div opening
+					const COPYTEXT = evt.target.dataset[COPYATTR]
+					navigator.clipboard.writeText(COPYTEXT);
+					evt.target.classList.toggle("copied");
+				}
+				
+			}
+			
+			// STUFF HAPPENS HERE AFTER ALL FILES LOAD, above is evt handlers
+
+			///////////// START Build up tag data /////////////
+			
+			data_tags = data_tags.sort();
+			
+			// count how instances of each item in array and return as object of unique names and count
+			const occurrences = data_tags.reduce(function (acc, curr) {
+				return acc[curr] ? ++acc[curr] : acc[curr] = 1, acc
+			}, {});
+			
+			// turn back into two arrays, one for tag name and the other for count values
+			data_tags = Object.keys(occurrences).map((key) => key); // names only
+			let data_tags_freq = Object.keys(occurrences).map((key) => [key,occurrences[key]]); // names and values
+			
+			// create html to show all tags
+			let data_tags_html = [];
+			for (let r = 0; r < data_tags_freq.length; r++) {
+				data_tags_html[r] = `<code><span class='tag ${data_tags_freq[r][0]}'>${data_tags_freq[r][0]}&nbsp(${data_tags_freq[r][1]})</span></code>`
+			}
+			
+			///////////// END Build up tag data /////////////
+			
+			///////////// START Build up tag taxonomy data /////////////
+			
+			taxon_array = taxon_array.sort();
+
+			// change taxonomy array to a better shape we can iterate over
+			const objtemp = {};
+			for (const [parent, child] of taxon_array) {
+				if (!objtemp[parent]) {
+					objtemp[parent] = [];
+				}
+				// only push if parent child not already included
+				if (!objtemp[parent].includes(child)) {
+					objtemp[parent].push(child);
+				}
+			}
+
+			// Flatten the values of objtemp into a single array
+			const objtemp_values = Object.values(objtemp).flat();
+			// Find items in data_tags that are not present in objtemp_values
+			const newItems = data_tags.filter(item => !objtemp_values.includes(item));
+			// Add the new items to objtemp under a new key
+			objtemp.orphan_tags = newItems;
+			
+			// create array from the object above for tag taxonomy
+			let taxon_array_filter = Object.entries(objtemp).map(([parent, children]) => [parent, children]);
+
+			// use the count tags info derived above to add a tag frequency array. generated this using google gemini so the ?.[1] ?? null is an incantation to me
+			let taxon_array_freq = taxon_array_filter.map(([taxon, tags]) => {
+				const freqs = tags.map(name =>
+					data_tags_freq.find(([tag]) => tag === name)?.[1] ?? null 
+				);
+			return [taxon, tags, freqs];
+			});
+
+			let taxonomy_html = [];
+			let taxonomy_tags = [];
+			for (let r = 0; r < taxon_array_freq.length; r++ ) {
+				taxonomy_tags = []
+				taxonomy_html.push(`<details class="taxon"><summary><code>${taxon_array_freq[r][0]}</code></summary>`);
+				for (let s = 0; s < taxon_array_freq[r][1].length; s++ ) {
+					taxonomy_tags[s] = (`<code><span class='tag ${taxon_array_freq[r][1][s]}'>${taxon_array_freq[r][1][s]} (${taxon_array_freq[r][2][s]})</span></code>`);
+				}
+				let taxonomy_tag_string = taxonomy_tags.join(" | ");
+				taxonomy_html.push(taxonomy_tag_string);
+				taxonomy_html.push(`</details>`);
+			}
+			taxonomy_html.push(`<details class="details_divider"><summary>selected categories</summary></details>`)	
+			
+			///////////// END Build up tag taxonomy data /////////////			
+
+			
+			// put all tags at top of the page
+			let data_tags_string = data_tags_html.join(" | ");
+			taxonomy_html.push(`<details class="taxon"><summary><code>all tags</code></summary>`);		
+			taxonomy_html.push(data_tags_string);
+			let taxonomy_html_string = taxonomy_html.join("");			
+			
+			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
+			
+			document.addEventListener("click", clickHandler);
+			
+		}
+		
+		// load in all the files...
+		for (let i = 0; i < input.files.length; i++) {
+		
+			let file = input.files[i];
+
+			if (file) {
+
+				let reader = new FileReader();
+				
+				let myfilename = input.files[i].name;
+				let lastModDate = input.files[i].lastModifiedDate;
+				
+				// this is the async function will runs each time a file is finished loading
+				reader.onload = function(e) {
+
+					const fileContent = e.target.result;	
+					
+					let mytitle = "";
+					const regex_title = /(?<=^# ).*$/gm;
+					let checktitle = fileContent.match(regex_title);
+					if (checktitle != null){mytitle = checktitle[0];}
+					
+					// find all the tags used in the files
+					const regex_tag = /(?<=#)(\w+)\b(?!\/)|#(\w+)\/(\w*\b)/g;   // Note "# Title" with a space is <h1>; #tag with no space is a tag [old (?<=#)\w*\b - no taxonomy]
+					let matchAll = fileContent.matchAll(regex_tag);
+					let matchAll_arr = Array.from(matchAll);
+					let tagarray = [];
+					let tag_html = [];
+					let parent = "";
+					let child= "";
+					
+					for (let p=0; p < matchAll_arr.length; p++) {
+					
+						for (let u=1; u === 1 || u === 3; u+=2) { // only have two capturing groups to test for tag matches (note that with matchAll array[0] will be the match which we don't want, we want grp 1 and grp 3)
+							if (typeof matchAll_arr[p][u] != 'undefined') {
+								const tagvalue = matchAll_arr[p][u].toLowerCase();
+								if (!tagarray.includes(tagvalue)) { // check we don't have the same tag twice in this file
+									tagarray[p] = tagvalue;
+									tag_html[p] = `<code><span class="tag ${tagarray[p]}">${tagarray[p]}</span></code>`
+								}
+								
+								data_tags.push(tagvalue); // retain duplicates here to allow later count
+							}
+						}
+						
+						// BUG - NEED TO AMEND BELOW TO NOT STORE DUPLICATE TAGS OR PARENTS
+						for (let u=2; u === 2 || u === 3; u++) { // now getting capturing grp 2 and grp 3 for parent child relationships
+						const string = matchAll_arr[p][u];
+							if (typeof string != 'undefined') {
+								if (u==2) {parent = string.toLowerCase();}
+								if (u==3) {child = string.toLowerCase();}
+							}
+						}
+						if (parent != "" && child != "") {taxon_array.push([parent, child]);}
+						
+					}
+					
+					
+					let tag_html_output = tag_html.join(" | "); // to show in summary element
+					let tag_classes = tagarray.join(" "); // to include in details element class list
+
+
+
+					
+					
+					// object not being used right now
+					data.push(new Data(input.files[i].name, mytitle, input.files[i].lastModifiedDate, fileContent, tagarray));
+
+					const outputDiv = document.getElementById('output');
+					const parsedText = markdownParser(fileContent);
+					
+					// BUG FILE CLASS IS KINDA REDUNDANT BUT NEED TO TIDY UP CSS DETAILS BEFORE REMOVING
+					// build the details element for the file loaded
+					const file_html = `<details class="${NOTE} ${tag_classes}">
+					<summary><span class="copyhighlight"><span class="${COPYTHIS}" title='copy filename to clipboard' data-${COPYATTR}='${myfilename}'>©</span> ${myfilename}</span><br>
+					${tag_html_output}
+					</summary>
+					${parsedText}<br><br><br>
+					</details>`;
+					
+					outputDiv.appendChild(new DOMParser().parseFromString(file_html, 'text/html').body.firstChild
+);
+					
+					// if it is the last file, do stuff after it is all loaded
+					if (i + 1 === input.files.length) {
+						allFilesLoaded();
+					}
+
+				};
+			
+			reader.readAsText(file); // this calls the async reader.onload function so don't put anything after this
+			
+			}
+		}
+
+	}
+
+const markdownParser = (text) => {
+
+	// used in the tag parse below because I wanted to get lower case class names but keep text as user had written it
+	function tagreplacer(match, p1, p2, p3, p4, offset, string) {
+	//	console.log("p1:" + p1+ " p2:" +p2+ " p3:" +p3+ " p4:" +p4)
+		if (typeof p2 != 'undefined') {
+			// for when we have #tag match (group 1 = #) (group 2 = tag)
+			const p2_lower = p2.toLowerCase()
+			return `<span class='tag ${p2_lower}'>${p1}${p2}</span>`;
+		} else if (typeof p4 != 'undefined') {
+			// for when we have a #something/childtag match (group 3 = #something/) (group 4 = childtag)
+			const p4_lower = p4.toLowerCase();
+			return `<span class='tag_cat'>${p3}</span><span class='tag ${p4_lower}'>${p4}</span>`;
+		} else {
+			console.log("no tag matches found for " + string);
+		}
+		
+	}
+	const toHTML = text
+		.replace(/^\d+(\. | )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. " or "1 "
+		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
+		.replace(/((^- .*\r?\n){1,})/gim, '<ul>\n$1</ul>') // lists unordered outer tags
+		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists unordered inner tag
+		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
+		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
+		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
+	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
+	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
+		.replace(/\_\_(.*)\_\_/gim, '<b>$1</b>') // bold text double _
+		.replace(/\_(.*)\_/gim, '<i>$1</i>') // italic text single _
+		.replace(/(#)(\w+)\b(?!\/)|(#\w+\/)(\w+)\b/gm, tagreplacer) // tag finder, replace with replacer function
+		.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
+	return toHTML.trim(); // using trim method to remove whitespace
+}
+  </script>
+
+</body>
+</html>
