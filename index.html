@@ -6,11 +6,49 @@
   <title>Text file viewer</title>
   <style>
     button {font: inherit;}
-	body {background-color: White;
-		font-family: Arial, Helvetica, sans-serif;
-		color: DarkSlateGray;}
+	body {		
+		font-family: Arial, Helvetica, sans-serif;		
+		
+		--colour-neutral: #80AAFF; /* bg */ /*white? #F6FFFC #80AAFF*/
+		--colour-neutral-alt: aquamarine; /* card bg */
+		--colour-contr: DarkSlateGray; /* text */
+		--colour-contr-emph: blue;  /* h1 */
+
+		--colour-compl: WhiteSmoke;  /* btn */
+		--colour-compl-emph-light: LightYellow;  /* btn hover */
+		--colour-compl-emph: #FFD480; /* btn select */ /*gold*/
+		--colour-compl-contr: DarkSlateGray; /* btn text */
+
+		--colour-compl-alt: WhiteSmoke; /* tag */
+		--colour-compl-alt-emph-light: MistyRose; /* tag hover */ 
+		--colour-compl-alt-emph: #FF80AA; /* tag select */ /*Pink*/
+		--colour-compl-alt-contr: DarkSlateGray; /* tag text */ /*MediumVioletRed*/
+		}
+	
+	.darkmode {	
+		
+		--colour-neutral: DarkSlateGray; /* bg */ /*white? #F6FFFC #80AAFF*/
+		--colour-neutral-alt: Black; /* card bg */
+		--colour-contr: aquamarine; /* text */
+		--colour-contr-emph: hotpink;  /* h1 */
+
+		--colour-compl: WhiteSmoke;  /* btn */ /*<--change this colour*/
+		--colour-compl-emph-light: LightYellow;  /* btn hover */
+		--colour-compl-emph: #FFD480; /* btn select */ /*gold*/
+		--colour-compl-contr: DarkSlateGray; /* btn text */
+
+		--colour-compl-alt: WhiteSmoke; /* tag */
+		--colour-compl-alt-emph-light: MistyRose; /* tag hover */ 
+		--colour-compl-alt-emph: #FF80AA; /* tag select */ /*Pink*/
+		--colour-compl-alt-contr: DarkSlateGray; /* tag text */ /*MediumVioletRed*/
+		}
+		
+	body {
+		background-color: var(--colour-neutral);
+		color: var(--colour-contr);
+	}
 	details.note {padding-left: 10px;
-		summary { background-color: Aquamarine;
+		summary { background-color: var(--colour-neutral-alt);
 			border-radius: 4px;
 			padding: 10px;
 			margin-left: -10px; /* to line up text with summary elem */
@@ -25,12 +63,13 @@
 	  padding: 10px 0 20px 0;
 	  details {
 		flex-grow: 1;
-		background-color: Aquamarine;
+		background-color: var(--colour-neutral-alt);
 		border-radius: 6px;
 		padding: 4px;
 		max-width: 200px;
 	  }
 	  summary {
+		cursor:pointer;
 		&::marker {
 		  content: "+ ";
 		}
@@ -47,7 +86,7 @@
 
 	  details[open] summary {
 		margin-left: -150px;
-		background-color: Aquamarine;
+		background-color: var(--colour-neutral-alt);
 		border-radius: 6px;
 		padding: 4px;
 		&::marker {
@@ -60,11 +99,12 @@
 		border-radius: 6px;
 	  }
 	  details.details_divider {
-		background-color: White;
+		background-color: var(--colour-neutral);
 		order: 1;
 		min-width: calc(100% - 20px); 
-		cursor: default;
+		
 		summary {
+		  cursor: default;
 		  &::marker {
 			content: "";
 		  }
@@ -72,7 +112,7 @@
 		&[open] {min-width: calc(100% - 150px - 20px); /* allow for summary offset when open and body margin */
 		}
 		&[open] summary {
-		  background-color: White;
+		  background-color: var(--colour-neutral);
 		}
 		&[open]::details-content {
 		  margin-top: 0;
@@ -81,20 +121,27 @@
 	  }
 	}
 	/* ### END OF TAG TAXONOMY CSS */		
+	.border-rounded {
+		border: 1px solid var(--colour-contr);
+		border-radius: 6px;
+		padding: 10px;
+	}
 	
 	.copyhighlight { border-radius: 20px;
 		padding: 4px 10px;
-		&:has(.copyflag:hover){outline:1px solid DarkSlateGray}
+		&:has(.copyflag:hover){outline:1px solid var(--colour-contr)}
 		}
-	h1   {color: Blue;}
-	.tag {/* color:DeepPink; */
-		background-color: WhiteSmoke;
+	h1, h2, h3, h4 {color: var(--colour-contr-emph);}
+	.tag {color:var(--colour-compl-contr);
+		background-color: var(--colour-compl);
 		padding: 1px 4px 1px 4px;
 		border-radius: 4px;}
-	.tag:hover {background-color: LightYellow;
+	.tag:hover {background-color: var(--colour-compl-emph-light);
 		cursor:pointer}
-	.tagselected {background-color: Gold}
-	.tag_cat {background-color: WhiteSmoke;
+	.tagselected {background-color: var(--colour-compl-emph)}
+	.tag_cat {
+		color: var(--colour-contr);
+		background-color: var(--colour-compl);
 		padding: 1px 4px 1px 4px;
 		border-radius: 4px;
 		margin-right: 4px;}
@@ -102,14 +149,14 @@
 	details.hider:not(:has(.tagselected)) {display:none;} /* hides details elems if their tags are not selected, if the hider class is present (added after first tag click to all details elems). The OR filter */
 	body:has(#and_filter:checked) {
 		details.and_hider {display:none} /* hides details elems if the and_hider class is present. The AND filter */
-		.tag:hover {background-color: MistyRose;}
-		.tagselected {background-color: Pink;
-			color: MediumVioletRed}
+		.tag:hover {background-color: var(--colour-compl-alt-emph-light);}
+		.tagselected {background-color: var(--colour-compl-alt-emph);
+			color: var(--colour-compl-alt-contr)}
 	}
 		
 	.copyflag {border-radius: 20px;
 		cursor:pointer;
-		&.copied {color:DeepPink;}
+		&.copied {color:var(--colour-compl-alt-contr);}
 		} /* css name needs to match js const COPYTHIS */
 	#output {display: flex;
 		align-items: flex-start;
@@ -120,7 +167,7 @@
 		flex-basis: 400px;
 		&[open] {
 			min-width: calc(100% - 30px); /* allow for margins */
-			border: 2px solid DarkSlateGray;
+			border: 2px solid var(--colour-contr);
 			border-radius: 6px;
 		}
 	}
@@ -141,11 +188,8 @@
 	.slider {
 	  position: absolute;
 	  cursor: pointer;
-	  top: 0;
-	  left: 0;
-	  right: 0;
-	  bottom: 0;
-	  background-color: Gold;
+	  inset: 0;
+	  background-color: var(--colour-compl-emph);
 	  transition: .4s;
 	  border-radius: 17px;
 	}
@@ -157,12 +201,18 @@
 	  width: 13px;
 	  left: 2px;
 	  bottom: 2px;
-	  background-color: white;
+	  background-color: var(--colour-neutral);
 	  transition: .1s;
 	  border-radius: 50%;
 	}
-	input:checked + .slider {background-color: Pink;}
-//	input:focus + .slider {box-shadow: 0 0 1px Pink;}
+	.switch:hover .slider:before {
+	background-color: var(--colour-compl);
+	}
+	input:checked + .slider {background-color: var(--colour-compl-alt-emph);}
+	.label_group:has(input:focus-visible) {
+      outline: 2px solid var(--colour-contr);
+	  border-radius: 6px;
+	}
 	input:checked + .slider:before {transform: translateX(13px);}
 	.flex-row {
 	  display: flex;
@@ -174,37 +224,47 @@
 	}
 	.flex-row > .showall {
 	  cursor:pointer;
-	  color: DarkSlateGray;
+	  color: var(--colour-contr);
 	  margin-left:40px;
-	  background-color:white;
-	  border: 2px solid Gold;
+	  background-color:var(--colour-neutral);
+	  border: 2px solid var(--colour-compl-emph);
 	  border-radius: 6px;
 	  &:hover {
-		background-color: LightYellow;
+		color: var(--colour-compl-alt-contr);
+		background-color: var(--colour-compl-emph-light);
 	  }
 	}
+	.stick-top {
+		position:sticky;
+		top: 0px;
+		background-color: var(--colour-neutral);
+	}
 	  
-	body:has(#and_filter:checked) .showall {border: 2px solid Pink;
-	  &:hover {background-color:MistyRose;
+	body:has(#and_filter:checked) .showall {border: 2px solid var(--colour-compl-alt-emph);
+	  &:hover {background-color:var(--colour-compl-alt-emph-light);
 	}
 	
 </style>
 </head>
-<body>
+<body class="darkmode">
 
   <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
   <br><br>
 
   <main>
-  <p><b>Tag categories</b></p>
+  <div class="border-rounded">
+  <b>Tag categories</b>
   <div id="tag_output"></div>
+  </div>
 
   <p><b>Text files</b></p>
-  <div class="flex-row">
+  <div class="flex-row stick-top">
   <div class="ANDOR_label">Filter</div>
+  <div class="flex-row label_group">
   <div class="ANDOR_label">OR</div>
   <label for="and_filter" class="switch"><input type="checkbox" id="and_filter" name="and_filter"><span class="slider"></span></label> 
   <div class="ANDOR_label">AND</div>
+  </div>
   <button class="showall">clear filters</button>
   </div>
   
@@ -218,6 +278,7 @@
 		let data = [];
 		let data_tags = []; // to store a list of tags across all files
 		let taxon_array = [];
+		const TAG_JOINER = " "; // previously " | "
 		const TAGGER = "tagselected";
 		const HIDER = "hider";
 		const AND_HIDER = "and_hider";
@@ -238,26 +299,38 @@
 		function allFilesLoaded() {
 		// do stuff after all files have been loaded, called in last file load below
 		
-			function clickHandler(evt){	
+			function clickHandler(evt){
+			//console.log("counter evt start: " + filter_counter);
 			
+				function clearFilters() {
+					filter_counter=0;
+					document.querySelectorAll(`.${NOTE}`).forEach(el => el.classList.remove(HIDER, AND_HIDER));
+
+					document.querySelectorAll(`.${TAGGER}`).forEach(el => el.classList.remove(TAGGER));
+				}
+				
+			
+				// TAG CLICK EVENT
 				if(evt.target.classList.contains("tag")) {
 				
 					evt.preventDefault(); // stops the details div opening
-					const targetTag = evt.target.classList[0] + " " + evt.target.classList[1]; // ie all elements with class "tag" and "some tag name"
+					const targetTag = evt.target.classList[0] + " " + evt.target.classList[1]; // ie all elements with class "tag" and "some tag name". BETTER WAY OF DOING THIS? BIT ROPEY
 					
 					const matchTagElements = document.getElementsByClassName(targetTag);
 					
 					// highlights selected tags through css class
 					for (let q = 0; q < matchTagElements.length; q++ ) {
 						let onOff = matchTagElements[q].classList.toggle(TAGGER);
-						if (onOff === true && q===0) {
-							filter_counter ++
-						} else if (onOff === false && q===0) {
-							filter_counter --
+						if (onOff == true && q==0) {	
+							filter_counter ++;
+						//	console.log(onOff + " index:" + q + "counter: " + filter_counter);
+						} else if (onOff == false && q==0) {
+							filter_counter --;
+						//	console.log(onOff + " index:" + q + "counter: " + filter_counter);
+							
 						}
 					}
 					
-					const notesElements = document.getElementsByClassName(NOTE);
 					const notesNodes = document.querySelectorAll(`.${NOTE}`);
 
 					for (const elem of notesNodes) {
@@ -271,28 +344,24 @@
 						}
 						
 					};
+					
+					if (filter_counter === 0) {clearFilters()};
 	
-					
+	
+				// CLEAR FILTERS CLICK EVENT	
 				} else if (evt.target.classList.contains("showall")) {
-				
-					// shows all notes and removes tag highlights
-					const notesElements = document.getElementsByClassName(NOTE);
-					for (let s = 0; s < notesElements.length; s++ ) {
-						notesElements[s].classList.remove(HIDER);
-						notesElements[s].classList.remove(AND_HIDER);
-					}
+
+					clearFilters()
+
 					
-					const tagHighlights = document.getElementsByClassName(TAGGER);  // recursion problem because this is a dynamic list! therefore iterating backwards below. There's prob a better way				
-					for (let s = tagHighlights.length -1; s >= 0; s-- ) {
-						tagHighlights[s].classList.remove(TAGGER);
-					}
+				// COPY FILENAME CLICK EVENT	
 				} else if (evt.target.classList.contains(COPYTHIS)) {
 					evt.preventDefault(); // stops the details div opening
 					const COPYTEXT = evt.target.dataset[COPYATTR]
 					navigator.clipboard.writeText(COPYTEXT);
 					evt.target.classList.toggle("copied");
 				}
-				
+				//console.log("counter evt end: " + filter_counter);
 			}
 			
 			// STUFF HAPPENS HERE AFTER ALL FILES LOAD, above is evt handlers
@@ -313,7 +382,7 @@
 			// create html to show all tags
 			let data_tags_html = [];
 			for (let r = 0; r < data_tags_freq.length; r++) {
-				data_tags_html[r] = `<code><span class='tag ${data_tags_freq[r][0]}'>${data_tags_freq[r][0]}&nbsp(${data_tags_freq[r][1]})</span></code>`
+				data_tags_html[r] = `<code><span class='tag ${data_tags_freq[r][0]}'>${data_tags_freq[r][0]}&nbsp;(${data_tags_freq[r][1]})</span></code>`
 			}
 			
 			///////////// END Build up tag data /////////////
@@ -358,9 +427,9 @@
 				taxonomy_tags = []
 				taxonomy_html.push(`<details class="taxon"><summary><code>${taxon_array_freq[r][0]}</code></summary>`);
 				for (let s = 0; s < taxon_array_freq[r][1].length; s++ ) {
-					taxonomy_tags[s] = (`<code><span class='tag ${taxon_array_freq[r][1][s]}'>${taxon_array_freq[r][1][s]} (${taxon_array_freq[r][2][s]})</span></code>`);
+					taxonomy_tags[s] = (`<code><span class='tag ${taxon_array_freq[r][1][s]}'>${taxon_array_freq[r][1][s]}\u00A0(${taxon_array_freq[r][2][s]})</span></code>`);
 				}
-				let taxonomy_tag_string = taxonomy_tags.join(" | ");
+				let taxonomy_tag_string = taxonomy_tags.join(TAG_JOINER);
 				taxonomy_html.push(taxonomy_tag_string);
 				taxonomy_html.push(`</details>`);
 			}
@@ -370,7 +439,7 @@
 
 			
 			// put all tags at top of the page
-			let data_tags_string = data_tags_html.join(" | ");
+			let data_tags_string = data_tags_html.join(TAG_JOINER);
 			taxonomy_html.push(`<details class="taxon"><summary><code>all tags</code></summary>`);		
 			taxonomy_html.push(data_tags_string);
 			let taxonomy_html_string = taxonomy_html.join("");			
@@ -439,7 +508,7 @@
 					}
 					
 					
-					let tag_html_output = tag_html.join(" | "); // to show in summary element
+					let tag_html_output = tag_html.join(TAG_JOINER); // to show in summary element
 					let tag_classes = tagarray.join(" "); // to include in details element class list
 
 
