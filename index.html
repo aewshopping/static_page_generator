@@ -526,8 +526,10 @@
 			let taxonomy_html_string = taxonomy_html.join("");			
 			
 			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
-			
-			document.addEventListener("pointerdown", clickHandler);
+			document.addEventListener('pointerdown', (event) => {
+  clickHandler(event);
+});
+			// document.addEventListener("pointerdown", clickHandler);
 			// document.addEventListener("touchstart", debouncedTouchHandler);
 			
 		}
