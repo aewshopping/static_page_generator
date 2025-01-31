@@ -355,7 +355,6 @@
 		// do stuff after all files have been loaded, called in last file load below
 		
 			function clickHandler(evt){
-			//console.log("counter evt start: " + filter_counter);
 			
 				function clearFilters() {
 					filter_counter=0;
@@ -502,6 +501,7 @@
 			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
 			
 			document.addEventListener("click", clickHandler);
+			document.addEventListener("touchstart", clickHandler);
 			
 		}
 		
