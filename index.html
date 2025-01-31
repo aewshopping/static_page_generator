@@ -351,9 +351,27 @@
 		  this.tags = mytags;
 		}
 		
+		// for touch events
+		const debounceTime = 250;
+		function debounce(func, delay) {
+		  let timeout;
+		  return function() {
+			const context = this;
+			const args = arguments;
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func.apply(context, args), delay);
+		  };
+		}
+		
 		function allFilesLoaded() {
 		// do stuff after all files have been loaded, called in last file load below
-		
+
+			const debouncedTouchHandler = debounce(function(event) {
+				console.log('Debounced Touch Started!');
+				event.preventDefault();
+				clickHandler(event);
+			}, debounceTime);
+
 			function clickHandler(evt){
 			
 				function clearFilters() {
@@ -501,7 +519,7 @@
 			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
 			
 			document.addEventListener("click", clickHandler);
-			document.addEventListener("touchstart", clickHandler);
+			document.addEventListener("touchstart", debouncedTouchHandler);
 			
 		}
 		
