@@ -54,22 +54,62 @@
 		background-color: var(--colour-neutral);
 		color: var(--colour-contr);
 	}
-	details.note {padding-left: 10px;
+	details.note {
+		--note-padding-sides: 20px;
+		--note-width: 70ch;
+		--note-border-thickness: 2px;
+		--note-border-radius: 6px;
+		--summary-width: 400px;
+		--summary-offset: 10px;
+		
+		padding-left: var(--summary-offset);
+		flex-basis: var(--summary-width); /* note that can't really transition width as flex box makes things jump around anyway */
 		summary { background-color: var(--colour-neutral-alt);
-			border-radius: 4px;
+			border-radius: var(--note-border-radius);
 			padding: 10px;
-			margin-left: -10px; /* to line up text with summary elem */
+			margin-left: calc(var(--summary-offset) * -1); /* to line up text with summary elem */
 			cursor:row-resize
 		}
+		&[open] {
+			min-width: calc(100% - var(--summary-width)); /* to force other details elements to a new line*/
+			margin-inline: auto;
+			summary {
+				max-width: var(--note-width);
+				margin-inline: auto;
+				border: var(--note-border-thickness) solid var(--colour-contr);
+				border-bottom: 0; /* want to draw a box round details contents element too*/
+				border-bottom-right-radius: 0;
+				border-bottom-left-radius: 0;
+				padding-inline: var(--note-padding-sides);
+			}
+		}
+		
 		&::details-content {
-			transition: height 0.2s linear, content-visibility 0.2s ease allow-discrete;
+			transition: height 0.2s linear, content-visibility 0.2s ease allow-discrete; /* BUG animation jump at start and end, something to do with open / close padding or margin */
 			height: 0px;
 			overflow-y: clip;
+			max-width: var(--note-width); /* constrain text line length */
+			margin-inline: auto;
 		}
 		&[open]::details-content {
 			height: max-content;
+			padding: 0px var(--note-padding-sides) 10px var(--note-padding-sides);
+			border: var(--note-border-thickness) solid var(--colour-contr);
+			border-top: 0; /* want to draw a box round summary element too*/
+			border-radius: var(--note-border-radius);
+			border-top-right-radius: 0;
+			border-top-left-radius: 0;
 		}
 	}
+
+	#output {display: flex;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 10px;}
+	#output > * {
+		flex-grow: 1;
+	}
+
 	/* ### START OF TAG TAXONOMY CSS */
 	#tag_output {
 	  display: flex;
@@ -146,7 +186,10 @@
 		padding: 4px 10px;
 		&:has(.copyflag:hover){outline:1px solid var(--colour-contr)}
 		}
-	h1, h2, h3, h4 {color: var(--colour-contr-emph);}
+	h1, h2, h3, h4 {color: var(--colour-contr-emph);
+		margin-top:0;
+		padding-top: 10px /* mainly because a first line of details:content with margin messes up border and animation! */
+	}
 	.tag {color:var(--colour-compl-contr);
 		background-color: var(--colour-compl);
 		padding: 1px 4px 1px 4px;
@@ -180,19 +223,7 @@
 		cursor:pointer;
 		&.copied {color:var(--colour-compl-alt-contr);}
 		} /* css name needs to match js const COPYTHIS */
-	#output {display: flex;
-		align-items: flex-start;
-		flex-wrap: wrap;
-		gap: 10px;}
-	.note {
-		flex-grow: 1;
-		flex-basis: 400px;
-		&[open] {
-			min-width: calc(100% - 30px); /* allow for margins */
-			border: 2px solid var(--colour-contr);
-			border-radius: 6px;
-		}
-	}
+
 	/* The switch - the box around the slider */
 	.switch {
 	  position: relative;
@@ -594,6 +625,7 @@ const markdownParser = (text) => {
 		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
 		.replace(/((^- .*\r?\n){1,})/gim, '<ul>\n$1</ul>') // lists unordered outer tags
 		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists unordered inner tag
+		.replace(/^#### (.*$)/gim, '<h4>$1</h4>') // h4 tag		
 		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
 		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
 		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
