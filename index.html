@@ -71,6 +71,7 @@
 			cursor:row-resize
 		}
 		&[open] {
+			padding-left: 0; /* not sure why I need this... aligns notes when details open */
 			min-width: calc(100% - var(--summary-width)); /* to force other details elements to a new line*/
 			margin-inline: auto;
 			summary {
@@ -352,7 +353,7 @@
 		}
 		
 		// for touch events
-		const debounceTime = 250;
+		const debounceTime = 150;
 		function debounce(func, delay) {
 		  let timeout;
 		  return function() {
