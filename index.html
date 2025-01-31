@@ -527,7 +527,8 @@
 			
 			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
 			document.addEventListener('pointerdown', (event) => {
-  clickHandler(event);
+            event.preventDefault();
+				clickHandler(event);
 });
 			// document.addEventListener("pointerdown", clickHandler);
 			// document.addEventListener("touchstart", debouncedTouchHandler);
