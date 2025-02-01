@@ -312,14 +312,7 @@
 </head>
 <body class="funmode">
 
-  <div class="flex-row">
-	  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
-	  <div class="flexgrow"></div>
-	  <label class="formcontrol">
-		<input type="radio" name="radio" checked />Snow</label>
-	  <label class="formcontrol">
-		<input type="radio" name="radio" id="funcheck" />Glow</label>
-  </div>
+  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
   <br><br>
 
   <main>
@@ -330,13 +323,16 @@
 
   <p><b>Text files</b></p>
   <div class="flex-row stick-top">
-  <div class="ANDOR_label">Filter</div>
-  <div class="flex-row label_group">
-  <div class="ANDOR_label">OR</div>
-  <label for="and_filter" class="switch"><input type="checkbox" id="and_filter" name="and_filter"><span class="slider"></span></label> 
-  <div class="ANDOR_label">AND</div>
-  </div>
-  <button class="showall">clear filters</button>
+	<div class="ANDOR_label">Filter</div>
+	<div class="flex-row label_group">
+		<div class="ANDOR_label">OR</div>
+		<label for="and_filter" class="switch"><input type="checkbox" id="and_filter" name="and_filter"><span class="slider"></span></label> 
+		<div class="ANDOR_label">AND</div>
+		<button class="showall">clear filters</button>
+	</div>
+	<div class="flexgrow"></div>
+	<label class="formcontrol"><input type="radio" name="radio" checked />Snow</label>
+	<label class="formcontrol"><input type="radio" name="radio" id="funcheck" />Glow</label>
   </div>
   
 
