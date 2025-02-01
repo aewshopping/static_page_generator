@@ -13,31 +13,30 @@
 	*::before,
 	*::after {
 	  box-sizing: border-box;
-	}
+	}*/
     button {font: inherit;}
 	body {		
 		font-family: Arial, Helvetica, sans-serif;		
 		
-		--colour-neutral: #80AAFF; /* bg */ /*white? #F6FFFC #80AAFF*/
-		--colour-neutral-alt: aquamarine; /* card bg */
+		--colour-neutral: WhiteSmoke; /* bg */ /*white? #F6FFFC #80AAFF*/
+		--colour-neutral-alt: white; /* card bg */
 		--colour-contr: DarkSlateGray; /* text */
 		--colour-contr-emph: blue;  /* h1 */
 
-		--colour-compl: WhiteSmoke;  /* btn */
+		--colour-compl: PaleTurquoise;  /* btn */
 		--colour-compl-emph-light: LightYellow;  /* btn hover */
 		--colour-compl-emph: #FFD480; /* btn select */ /*gold*/
 		--colour-compl-contr: DarkSlateGray; /* btn text */
 		--colour-compl-emph-contr: DarkSlateGray; /* btn select text */	
 
-		--colour-compl-alt: WhiteSmoke; /* tag */
+		--colour-compl-alt: PaleTurquoise; /* tag */
 		--colour-compl-alt-emph-light: MistyRose; /* tag hover */ 
 		--colour-compl-alt-emph: #FF80AA; /* tag select */ /*Pink*/
 		--colour-compl-alt-contr: DarkSlateGray; /* tag text */ /*MediumVioletRed*/
 		--colour-compl-alt-emph-contr: DarkSlateGray; /* tag select text */	
 		}
 	
-	.funmode {	
-		
+	body:has(input[type="radio"]#funcheck:checked) {		
 		--colour-neutral: DarkSlateGray; /* bg */
 		--colour-neutral-alt: Black; /* card bg */
 		--colour-contr: aquamarine; /* text */
@@ -54,7 +53,7 @@
 		--colour-compl-alt-emph: #FF80AA; /* tag select */ /* PINK */
 		--colour-compl-alt-contr: aquamarine; /* tag text */
 		--colour-compl-alt-emph-contr: DarkSlateGray; /* tag select text */	
-		}
+	}
 		
 	body {
 		background-color: var(--colour-neutral);
@@ -84,11 +83,11 @@
 			summary {
 				max-width: calc(var(--note-width) + var(--note-padding-sides) * 2 + var(--note-border-thickness) * 2); /* faffing around here due to border box sizing css above*/
 				margin-inline: auto;
-				border: var(--note-border-thickness) solid var(--colour-contr);
+				border: var(--note-border-thickness) solid var(--colour-contr); /* could mess around with box shadows instead to prevent v small layout shift when borders applied. Bit tricky though */
 				border-bottom: 0; /* want to draw a box round details contents element too*/
 				border-bottom-right-radius: 0;
-				border-bottom-left-radius: 0;
-				padding-inline: var(--note-padding-sides);
+				border-bottom-left-radius: 0; */				
+				padding-inline: var(--note-padding-sides); 
 			}
 		}
 		
@@ -197,7 +196,7 @@
 		}
 	h1, h2, h3, h4 {color: var(--colour-contr-emph);
 		margin-top:0;
-		padding-top: 10px /* mainly because a first line of details:content with margin messes up border and animation! */
+		padding-top: 10px /* mainly because a first line of details:content with margin messes up border and animation! Bit of hack but other methods create other problems */
 	}
 	.tag {color:var(--colour-compl-contr);
 		background-color: var(--colour-compl);
@@ -281,6 +280,7 @@
 	  align-items: center;
 	  padding: 4px;
 	}
+	.flexgrow {flex-grow: 1}
 	.flex-row > .ANDOR_label {
 	  padding-inline: 4px;
 	}
@@ -305,14 +305,21 @@
 	body:has(#and_filter:checked) .showall {border: 2px solid var(--colour-compl-alt-emph);
 	  &:hover {
 		  background-color:var(--colour-compl-alt-emph-light);
-		  color: var(var(--colour-compl-alt-emph-light));
-	}
-	
+		  color: var(--colour-compl-alt-emph-light);
+	  }
+    }
 </style>
 </head>
 <body class="funmode">
 
-  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
+  <div class="flex-row">
+	  <input type="file" id="fileInput" accept=".txt" multiple onchange="loadFile()">
+	  <div class="flexgrow"></div>
+	  <label class="formcontrol">
+		<input type="radio" name="radio" checked />Snow</label>
+	  <label class="formcontrol">
+		<input type="radio" name="radio" id="funcheck" />Glow</label>
+  </div>
   <br><br>
 
   <main>
