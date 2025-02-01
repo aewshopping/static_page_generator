@@ -50,7 +50,7 @@ All tags and categories are converted to lower case.
 
 ### Extremely basic markdown
 
-The markdown parsing is very simple. Only one level of list nesting for example. Links are not supported. This will break, particularly on the first and last lines...
+The markdown parsing is very simple. Only one level of list nesting for example. Links are not supported. Things will break, particularly on the first and last lines...
 
 You could have a look at something like this if you wanted to improve the markdown parsing: [https://github.com/jozdk/simple-markdown-parser/tree/main](https://github.com/jozdk/simple-markdown-parser/tree/main).
 
