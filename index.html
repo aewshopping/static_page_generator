@@ -359,30 +359,13 @@
 		  this.mycontent = mycontent;
 		  this.tags = mytags;
 		}
-		
-		// for touch events
-		const debounceTime = 150;
-		function debounce(func, delay) {
-		  let timeout;
-		  return function() {
-			const context = this;
-			const args = arguments;
-			clearTimeout(timeout);
-			timeout = setTimeout(() => func.apply(context, args), delay);
-		  };
-		}
-		
+
+
 		function allFilesLoaded() {
 		// do stuff after all files have been loaded, called in last file load below
 
-			const debouncedTouchHandler = debounce(function(event) {
-				console.log('Debounced Touch Started!');
-				event.preventDefault();
-				clickHandler(event);
-			}, debounceTime);
-
 			function clickHandler(evt){
-			
+
 				function clearFilters() {
 					filter_counter=0;
 					document.querySelectorAll(`.${NOTE}`).forEach(el => el.classList.remove(HIDER, AND_HIDER));
@@ -526,11 +509,9 @@
 			let taxonomy_html_string = taxonomy_html.join("");			
 			
 			document.getElementById('tag_output').innerHTML = taxonomy_html_string 
-			document.addEventListener('pointerdown', (event) => {
-				clickHandler(event);
-});
-			// document.addEventListener("pointerdown", clickHandler);
-			// document.addEventListener("touchstart", debouncedTouchHandler);
+			
+		//	document.addEventListener('pointerdown', clickHandler, true); // captures touch but prevent default only works erratically! Also doesn't distinguish between left and right clicks
+			document.addEventListener("click", clickHandler);
 			
 		}
 		
