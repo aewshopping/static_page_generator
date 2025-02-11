@@ -644,8 +644,8 @@ const markdownParser = (text) => {
 		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
 	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
 	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
-		.replace(/\_\_(.*)\_\_/gim, '<b>$1</b>') // bold text double _
-		.replace(/\_(.*)\_/gim, '<i>$1</i>') // italic text single _
+		.replace(/\_\_(.*?)\_\_/gim, '<b>$1</b>') // bold text double _
+		.replace(/\_(.*?)\_/gim, '<i>$1</i>') // italic text single _
 		.replace(/(#)(\w+)\b(?!\/)|(#\w+\/)(\w+)\b/gm, tagreplacer) // tag finder, replace with replacer function
 		.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
 	return toHTML.trim(); // using trim method to remove whitespace
