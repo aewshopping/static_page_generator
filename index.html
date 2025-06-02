@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Text file viewer</title>
+  <link rel="icon" href="images/pencil.png" type="image/png">
   <style>
 	:root {
 		interpolate-size: allow-keywords; /* for animating details open and close */
@@ -15,13 +16,26 @@
 	  box-sizing: border-box;
 	}*/
     button {font: inherit;}
+	img {max-width: 100%;
+		padding: 10px;
+		display: block;
+		margin-inline: auto}
+	table {
+		border-collapse: collapse; /* Collapse borders into a single line */
+		width: 100%; /* Adjust width as needed */
+	}
+	th, td {
+		border: 1px solid black; /* Set border style, width, and color */
+		padding: 8px; /* Add some padding for better readability */
+		text-align: left; /* Align text as needed */
+	}
 	body {		
 		font-family: Arial, Helvetica, sans-serif;		
 		
 		--colour-neutral: WhiteSmoke; /* bg */ /*white? #F6FFFC #80AAFF*/
 		--colour-neutral-alt: white; /* card bg */
 		--colour-contr: DarkSlateGray; /* text */
-		--colour-contr-emph: blue;  /* h1 */
+		--colour-contr-emph: RoyalBlue;  /* h1 */
 
 		--colour-compl: PaleTurquoise;  /* btn */
 		--colour-compl-emph-light: LightYellow;  /* btn hover */
@@ -59,6 +73,51 @@
 		background-color: var(--colour-neutral);
 		color: var(--colour-contr);
 	}
+	
+	/* ########   BLOCKQUOTE FORMATING START   ######## */
+	blockquote {
+		border-left: 2px solid var(--colour-contr-emph);
+		padding-left: 0.5em;
+		display: inline-block;
+	}
+	blockquote > :first-child {
+		margin-top: 0px;
+		&::before {
+			content: "\0275D";
+		}
+		&::first-letter {
+			color:var(--colour-contr-emph);
+			float: left; 
+			font-size: 4em;
+			margin-right: 0.1em;
+			margin-top: 0.3em;
+			line-height: 0.2em;
+		}
+	}
+	blockquote > :last-child {
+		margin-bottom: 0px;
+	}
+	blockquote > blockquote { /* this is to easily create a ref for a blockquote in markdown with double blockquote >> */
+		border-left: none;
+		padding-left: 0em;
+		margin-top:0em;
+	}
+	blockquote > blockquote > :first-child {
+		&::before {
+			content: "Ref: ";
+		}
+		&::first-letter {
+			color:var(--colour-contr);
+			float: left; 
+			font-size: 1em;
+			margin-right: 0em;
+			margin-top: 0em;
+			line-height: 1em;
+		}
+	font-style: italic;
+	}
+	/* ########   BLOCKQUOTE FORMATING END   ######## */
+	
 	details.note {
 		--note-padding-sides: 20px;
 		--note-width: 70ch;
@@ -66,10 +125,15 @@
 		--note-border-radius: 6px;
 		--summary-width: 400px;
 		--summary-offset: 10px;
+		break-inside: avoid; /* for use in column layout */
+		margin-bottom: 10px;
 		
 		padding-left: var(--summary-offset);
 		flex-basis: var(--summary-width); /* note that can't really transition width as flex box makes things jump around anyway */
-		summary { background-color: var(--colour-neutral-alt);
+		summary { /* background-color: var(--colour-neutral-alt);*/
+			--color-mono-contr: hsl(from attr(data-color type(<color>)) 0 0 calc(round(100 - l, 100)));
+			background-color: attr(data-color type(<color>), var(--colour-neutral-alt));
+			color: var(--color-mono-contr);
 			border-radius: var(--note-border-radius);
 			padding: 10px;
 			padding-left: 20px;
@@ -108,15 +172,23 @@
 			border-top-left-radius: 0;
 			padding-bottom: 10px;
 		}
+		summary + * {margin:0;padding:10px} /* stops the details content from floating away from the summary which means the border doesn't go all the way around! */
+		
 	}
 
-	#output {display: flex;
+	#output {
+		column-width: 500px; /* decided to go with a multi column approach. Looks better, biggest problem is opening a summary note can cause reflow and note to move to end of previous column */
+		column-gap: 10px;
+		column-count: auto;	
+	/*	display: flex; /* don't need this stuff right now */
 		align-items: flex-start;
+		flex-direction: column;
 		flex-wrap: wrap;
-		gap: 10px;}
-	#output > * {
-		flex-grow: 1;
+		gap: 10px; */
 	}
+	/* #output > * {
+		flex-grow: 1;
+	} */
 
 	/* ### START OF TAG TAXONOMY CSS */
 	#tag_output {
@@ -195,8 +267,6 @@
 		&:has(.copyflag:hover){outline:1px solid var(--colour-contr)}
 		}
 	h1, h2, h3, h4 {color: var(--colour-contr-emph);
-		margin-top:0;
-		padding-top: 10px /* mainly because a first line of details:content with margin messes up border and animation! Bit of hack but other methods create other problems */
 	}
 	.tag {color:var(--colour-compl-contr);
 		background-color: var(--colour-compl);
@@ -338,6 +408,7 @@
 
   <div id="output"></div>
   </main>
+  <script src="public/marked.min.js"></script>
   <script>
  
     function loadFile() {
@@ -574,7 +645,13 @@
 						if (parent != "" && child != "") {taxon_array.push([parent, child]);}
 						
 					}
-					
+
+					// this is to allow users to select a color by applying a color tag to the file
+					let summary_color = "";
+					const regex_color = /#color\/(\w+)/m; // note that this works because it doesn't have the global g flag
+					let checkcolor = fileContent.match(regex_color);
+					if (checkcolor != null){summary_color = checkcolor[1];}
+
 					
 					let tag_html_output = tag_html.join(TAG_JOINER); // to show in summary element
 					let tag_classes = tagarray.join(" "); // to include in details element class list
@@ -587,12 +664,13 @@
 					data.push(new Data(input.files[i].name, mytitle, input.files[i].lastModifiedDate, fileContent, tagarray));
 
 					const outputDiv = document.getElementById('output');
-					const parsedText = markdownParser(fileContent);
+					let parsedText = markdownParser(fileContent); // this has been demoted to tag rendering!
+					parsedText = marked.parse(parsedText);
 					
 					// BUG FILE CLASS IS KINDA REDUNDANT BUT NEED TO TIDY UP CSS DETAILS BEFORE REMOVING
 					// build the details element for the file loaded
 					const file_html = `<details class="${NOTE} ${tag_classes}">
-					<summary><span class="copyhighlight"><span class="${COPYTHIS}" title='copy filename to clipboard' data-${COPYATTR}='${myfilename}'>©</span> ${myfilename}</span><br>
+					<summary data-color="${summary_color}"><span class="copyhighlight"><span class="${COPYTHIS}" title='copy filename to clipboard' data-${COPYATTR}='${myfilename}'>©</span> ${myfilename}</span><br>
 					${tag_html_output}
 					</summary>
 					${parsedText}<br><br><br>
@@ -634,20 +712,22 @@ const markdownParser = (text) => {
 		
 	}
 	const toHTML = text
-		.replace(/^\d+(\. | )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. " or "1 "
+	/*	.replace(/^\d+(\. )(.*$)/gim, '<li>$2</li>') // ordered lists tag of format "1. "
 		.replace(/((<li>.*<\/li>\r?\n){1,})/g, '<ol>$1</ol>') // lists ordered outer tag
 		.replace(/((^- .*\r?\n){1,})/gim, '<ul>\n$1</ul>') // lists unordered outer tags
 		.replace(/^- (.*$)/gim, '<li>$1</li>') // lists unordered inner tag
 		.replace(/^#### (.*$)/gim, '<h4>$1</h4>') // h4 tag		
 		.replace(/^### (.*$)/gim, '<h3>$1</h3>') // h3 tag
 		.replace(/^## (.*$)/gim, '<h2>$1</h2>') // h2 tag
-		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag
-	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double *
-	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single *
-		.replace(/\_\_(.*?)\_\_/gim, '<b>$1</b>') // bold text double _
+		.replace(/^# (.*$)/gim, '<h1>$1</h1>') // h1 tag */
+	//	.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>') // bold text double asterisk
+	//	.replace(/\*(.*)\*/gim, '<i>$1</i>') // italic text single asterisk
+	/*	.replace(/\_\_(.*?)\_\_/gim, '<b>$1</b>') // bold text double _
 		.replace(/\_(.*?)\_/gim, '<i>$1</i>') // italic text single _
-		.replace(/(#)(\w+)\b(?!\/)|(#\w+\/)(\w+)\b/gm, tagreplacer) // tag finder, replace with replacer function
-		.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
+		.replace(/!\[([^\]]*)\]\(([^)]+?)\)/g, '<img src="$2" title="$1" alt="$1">') // show images
+		.replace(/^(?!.*!\[)(.*?)\[([^\]]+)\]\(([^)]+?)\)/gm, '$1<a href="$3" target="_blank">$2</a>') // show links, note that it doesn't support titles, also opens in new tab */
+		.replace(/(#)(\w+)\b(?!\/)|(#\w+\/)(\w+)\b/gm, tagreplacer); // tag finder, replace with replacer function
+	//	.replace(/\n(\w.*)/g, '<p>$1</p>'); // replace paras with <p> tags. Note fails on first line!
 	return toHTML.trim(); // using trim method to remove whitespace
 }
   </script>
